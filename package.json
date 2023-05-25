@@ -1,0 +1,26 @@
+{
+  "name": "@nrkn/loned",
+  "version": "0.1.0",
+  "description": "Layout 1D",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "npx rimraf dist && npx tsc",
+    "test": "npm run build && node ./dist/test/index.js",
+    "coverage": "npm run build && npx nyc --reporter=lcov --reporter=text --exclude src/test node ./dist/test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrkn/loned.git"
+  },
+  "keywords": [],
+  "author": "Nik Coughlin <nrkn.com@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrkn/loned/issues"
+  },
+  "homepage": "https://github.com/nrkn/loned#readme",
+  "devDependencies": {
+    "@types/node": "^20.2.3"
+  }
+}

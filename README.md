@@ -1,2 +1,5 @@
 # loned
- Layout 1D
+
+Layout in 1D
+
+combineSplitLayout, insertItem, splitLayoutAt
