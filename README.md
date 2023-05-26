@@ -151,8 +151,8 @@ your own indices when inserting etc
 
 You will just need to bring your own:
 
-measure: (item: T) => bigint
-slice: (item: T, slicedata ) => T[] 
+- `measure(item: T): bigint`
+- `slice(item: T, slicedata ): T[]`
 
 We will provide an implementation for plain strings
 
