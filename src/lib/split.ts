@@ -112,7 +112,7 @@ export const splitLayoutAt = (layout: Layout1D, pos: bigint): SplitLayout => {
 //   which is still not foolsafe, but much better
 // - our function always maintains the original size of the layout it was
 //   created from, so it is safe to construct a new one from the saved data
-export const combineSplitLayout = (split: SplitLayout) => {
+export const combineSplitLayout = (split: SplitLayout): Layout1D => {
   // we don't care about the type for reconstruction - it's useful if you're
   // calling splitLayoutAt for another purpose, but not here
   const { splits, start, next, size } = split
@@ -167,8 +167,13 @@ const sliceHelper = (
 }
 
 const splitChildAt = (child: LayoutItem1D, pos: bigint) => {
-  if (pos <= child.start || pos >= child.next)
-    return Object.freeze([child])
+  // this can never happen, because we don't export this function and it is 
+  // never called with a bad pos. but if you need to use it elsewhere, add this
+  // back in - it returns an array as expected, but with just the existing
+  // child in it
+  //
+  // if (pos <= child.start || pos >= child.next)
+  //   return Object.freeze([child])
 
   const split: LayoutItem1D[] = []
 
@@ -194,7 +199,9 @@ const splitChildAt = (child: LayoutItem1D, pos: bigint) => {
     return Object.freeze(split)
   }
 
-  if (child.type === 'slice') {
+  // this is implicit - but you need to remember it if you add more types
+
+  //if (child.type === 'slice') {
     const head = sliceHelper(
       shared, child.sliceStart, headSize, headPos, pos, headSize
     )
@@ -206,7 +213,7 @@ const splitChildAt = (child: LayoutItem1D, pos: bigint) => {
     split.push(head, tail)
 
     return Object.freeze(split)
-  }
+  //}
 
-  throw Error('Unhandled case @ ' + pos)
+  //throw Error('Unhandled case @ ' + pos)
 }

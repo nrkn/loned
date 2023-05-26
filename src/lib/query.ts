@@ -65,12 +65,7 @@ export const queryLayout = (layout: Layout1D, pos: bigint): QueryResult => {
           insideHelper(i - 1, prev, prev.size),
           insideHelper(i, item, 0n)
         )
-      } else if (pos === item.next) {
-        return boundaryHelper(
-          insideHelper(i, item, item.size),
-          insideHelper(i + 1, layout.items[i + 1], 0n)
-        )
-      }
+      } 
 
       return insideHelper(i, item, pos - item.start)
     }

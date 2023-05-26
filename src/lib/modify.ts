@@ -1,5 +1,5 @@
 import { Layout1D, LayoutItem1D } from '../types'
-import { templatedLayout } from './layout'
+import { dangerousLayout, relayout } from './layout'
 import { splitLayoutAt } from './split'
 
 export const insertItem = (
@@ -19,8 +19,8 @@ export const insertItem = (
   }
 
   // valid until newItem
-  return templatedLayout(
-    [...res.head, newItem, ...res.tail], BigInt(res.head.length)
+  return dangerousLayout(
+    [...res.head, newItem, ...res.tail], res.head.length
   )
 }
 
@@ -57,9 +57,9 @@ export const overwrite = (
   const afterEnd = takeEnd(layout, layout.size - end)
 
   // valid until pos
-  return templatedLayout(
-    [...beforeStart.items, newItem, ...afterEnd.items]
-    //, beforeStart.size
+  return dangerousLayout(
+    [...beforeStart.items, newItem, ...afterEnd.items],
+    beforeStart.items.length
   )
 }
 
@@ -71,7 +71,7 @@ export const takeStart = (
 
   const res = splitLayoutAt(layout, size)
 
-  return templatedLayout(res.head, BigInt( res.head.length ) ) // the whole thing is valid  
+  return dangerousLayout(res.head, res.head.length ) // the whole thing is valid  
 }
 
 export const removeEnd = takeStart
@@ -84,7 +84,7 @@ export const takeEnd = (
 
   const res = splitLayoutAt(layout, layout.size - size)
 
-  return templatedLayout(res.tail) // all invalid
+  return relayout(res.tail) // all invalid, whole thing needs recalc
 }
 
 export const removeStart = takeEnd
@@ -117,7 +117,8 @@ export const removeSlice = (
   const beforeStart = takeStart(layout, start )
   const afterEnd = takeEnd(layout, layout.size - end)
 
-  return templatedLayout(
-    [...beforeStart.items, ...afterEnd.items]
+  return dangerousLayout(
+    [...beforeStart.items, ...afterEnd.items],
+    beforeStart.items.length
   )
 }
