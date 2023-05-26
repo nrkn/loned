@@ -115,8 +115,9 @@ console.log( result ) // back in our original format, but with new uWu
   items and so forth
 
 - `splitLayoutAt(layout: Layout1D, pos: bigint): SplitLayout`
-  split a layout into a head and tail of LayoutItem1D, along with a lot of 
-  other information about the split (eg the query result)
+  split a layout into a head and tail of LayoutItem1D, potentially splitting 
+  inside an item, along with a lot of other information about the split (eg the 
+  query result)
 - `combineSplitLayout(split: SplitLayout): Layout1D`
   combine a split layout back into a single layout
    
