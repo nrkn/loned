@@ -1,12 +1,16 @@
 import * as assert from 'assert'
 
-import { combineSplitLayout, insertItem, loned, queryLayout, splitLayoutAt } from '..'
+import { 
+  combineSplitLayout, insertItem, loned, queryLayout, splitLayoutAt 
+} from '..'
 
 import { Layout1D } from '../types'
 
 import {
   appendItem, overwrite, prependItem, removeSlice, takeEnd, takeSlice, takeStart
 } from '../lib/modify'
+
+import { fix, group, runTest, summary } from './fix'
 
 // test utilities - treat strings as though they were BigUint64Arrays (their 
 // lengths) as this is an easy way to visualise and test abstract layouts
@@ -49,21 +53,9 @@ const stringInsert = (target: string, insert: string, position: number) => {
   return head + insert + tail
 }
 
-const tickLabel = ' :)'
-const failLabel = '>:('
+
 
 // fixtures
-
-type Fixture = {
-  name: string
-  input: string[]
-  inputString: string
-}
-
-const fix = (
-  name: string, input: string[]
-): Fixture =>
-  ({ name, input, inputString: input.join('') })
 
 const fixtures = [
   // oregon trail
@@ -77,66 +69,6 @@ const fixtures = [
   //   []
   // ),
 ]
-
-// if interactive, fit to screen, else use 40 columns
-
-let cols = process.stdout.columns || 40
-
-// leave some room for our decorative dividers
-if (cols > 3) cols -= 2
-
-// divider helper
-const line = (value: number, head = '-', pattern = '=-') =>
-  head + pattern.repeat(Math.floor(value / pattern.length))
-
-// test runners
-let totalTests = 0
-let passedTests = 0
-let failedTests = 0
-
-const test = (head: string, action: () => void) => {
-  let label = failLabel
-
-  try {
-    action()
-    passedTests++
-    label = tickLabel
-  } catch (err: any) {
-    console.error(err)
-    failedTests++
-  }
-
-  head = label + ' ' + head
-
-  console.log(head)
-  console.log(line(head.length))
-
-  totalTests++
-}
-
-const group = (head: string, action: () => void) => {
-  const length = cols
-  console.log()
-  console.log(line(length, '=', '-='))
-  console.log(head)
-  console.log(line(length, '=', '-='))
-
-  action()
-}
-
-const summary = (action: () => void) => {
-  const passReport = `passed ${passedTests}/${totalTests}`
-  const failReport = `failed ${failedTests}/${totalTests}`
-  const report = `${passReport}\n${failReport}`
-
-  const length = cols
-  console.log()
-  console.log(line(length, 'U', 'wU'))
-  console.log(report)
-  console.log(line(length, 'O', 'wO'))
-
-  action()
-}
 
 // start tests
 
@@ -157,7 +89,7 @@ for (let i = 0; i < fixtures.length; i++) {
       const layout = loned(bigInts)
 
       // round trip test
-      test('round trip layout', () => {
+      runTest('round trip layout', () => {
         const output = layoutToStrings(f.input, layout)
 
         assert.deepStrictEqual(output, f.input)
@@ -175,7 +107,7 @@ for (let i = 0; i < fixtures.length; i++) {
         splitPositions.push(s)
       }
 
-      test('round trip split', () => {
+      runTest('round trip split', () => {
         for (const pos of splitPositions) {
           const fromStart = pos
           const startSplit = splitLayoutAt(layout, fromStart)
@@ -194,7 +126,7 @@ for (let i = 0; i < fixtures.length; i++) {
       const insertSize = BigInt(insert.length)
 
       // insert tests      
-      test('insert', () => {
+      runTest('insert', () => {
         for (const pos of splitPositions) {
           const fromStart = pos
 
@@ -215,7 +147,7 @@ for (let i = 0; i < fixtures.length; i++) {
       })
 
       // remove tests      
-      test('removeSlice', () => {
+      runTest('removeSlice', () => {
         for (const pos of splitPositions) {
           if (pos < 0n || pos >= (layout.size - insertSize - 1n)) continue
 
@@ -239,7 +171,7 @@ for (let i = 0; i < fixtures.length; i++) {
 
 group('one shots', () => {
   // make sure you can create a split item within an existing split item
-  test('split a split', () => {
+  runTest('split a split', () => {
     const splsplData = ['abdefg', ' ', 'hijkkm']
     const splsplString = splsplData.join('')
     const splsplSizes = stringsToSizes(splsplData)
@@ -255,7 +187,7 @@ group('one shots', () => {
 
   // append/prepend - exactly what you expect
 
-  test('appendItem', () => {
+  runTest('appendItem', () => {
     const appendInput = ['abdefg', ' ', 'hijkkm']
     const append = '(UwU)'
     const appendData = [...appendInput, append]
@@ -271,7 +203,7 @@ group('one shots', () => {
     assert.deepStrictEqual(appString, appendExpect)
   })
 
-  test('prependItem', () => {
+  runTest('prependItem', () => {
     const prependInput = ['abdefg', ' ', 'hijkkm']
     const prepend = '(UwU)'
     const prependData = [...prependInput, prepend]
@@ -288,7 +220,7 @@ group('one shots', () => {
   // should return the same length, we should check that!
   // would benefit from bounds checking too, like we do with fixtures
   // in fact maybe we should have it in fixtures?
-  test('overwrite', () => {
+  runTest('overwrite', () => {
     const overInput = ['abdefg <', 'uWu', '> hijkkm']
     const over = '(UwU)'
 
@@ -305,7 +237,7 @@ group('one shots', () => {
   })
 
   // as per above
-  test('takeSlice', () => {
+  runTest('takeSlice', () => {
     const takeInput = ['abdefg <', 'uWu', '> hijkkm']
     const takeLayout = loned(stringsToSizes(takeInput))
     const takeExpect = '<uWu>'
@@ -318,21 +250,21 @@ group('one shots', () => {
 })
 
 group( 'modify', () => {
-  test( 'insert negative size fails', () => {
+  runTest( 'insert negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => insertItem( layout, 0, -1n, 0n ) )
   })
 
-  test( 'overwrite negative size fails', () => {
+  runTest( 'overwrite negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => overwrite( layout, 0, -1n, 0n ) )
   })
 
-  test( 'overwrite negative pos fails', () => {
+  runTest( 'overwrite negative pos fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
@@ -340,7 +272,7 @@ group( 'modify', () => {
   })
 
   // pos + size = end
-  test( 'overwrite with end out of layout bounds fails', () => {
+  runTest( 'overwrite with end out of layout bounds fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
@@ -349,14 +281,14 @@ group( 'modify', () => {
 
   // takeStart - just test negative size and that size is less that layout size
 
-  test( 'takeStart negative size fails', () => {
+  runTest( 'takeStart negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => takeStart( layout, -1n ) )
   })
 
-  test( 'takeStart size greater than layout size fails', () => {
+  runTest( 'takeStart size greater than layout size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
@@ -365,14 +297,14 @@ group( 'modify', () => {
 
   // same for takeEnd
 
-  test( 'takeEnd negative size fails', () => {
+  runTest( 'takeEnd negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => takeEnd( layout, -1n ) )
   })
 
-  test( 'takeEnd size greater than layout size fails', () => {
+  runTest( 'takeEnd size greater than layout size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
@@ -381,21 +313,21 @@ group( 'modify', () => {
 
   // for takeSlice: negative start, negative size, end > layout.size
 
-  test( 'takeSlice negative start fails', () => {
+  runTest( 'takeSlice negative start fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => takeSlice( layout, -1n, 1n ) )
   })
 
-  test( 'takeSlice negative size fails', () => {
+  runTest( 'takeSlice negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => takeSlice( layout, 0n, -1n ) )
   })
 
-  test( 'takeSlice end > layout.size fails', () => {
+  runTest( 'takeSlice end > layout.size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
@@ -404,21 +336,21 @@ group( 'modify', () => {
 
   // same for removeSlice
 
-  test( 'removeSlice negative start fails', () => {
+  runTest( 'removeSlice negative start fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
 
     assert.throws( () => removeSlice( layout, -1n, 1n ) )
   })
 
-  test( 'removeSlice negative size fails', () => {
+  runTest( 'removeSlice negative size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
     
     assert.throws( () => removeSlice( layout, 0n, -1n ) )
   })
 
-  test( 'removeSlice end > layout.size fails', () => {
+  runTest( 'removeSlice end > layout.size fails', () => {
     const input = ['abdefg', ' ', 'hijkkm']
     const layout = loned(stringsToSizes(input))
     
@@ -427,7 +359,7 @@ group( 'modify', () => {
 })
 
 group('query layout', () => {
-  test('empty', () => {
+  runTest('empty', () => {
     const emptyInput = new BigUint64Array(0)
     const emptyLayout = loned(emptyInput)
 
@@ -441,7 +373,7 @@ group('query layout', () => {
     assert.deepStrictEqual(res, expect)
   })
 
-  test('malformed layout', () => {
+  runTest('malformed layout', () => {
     const oneInput = new BigUint64Array([2n])
 
     const oneLayout = loned(oneInput)
@@ -455,7 +387,7 @@ group('query layout', () => {
     assert.throws(() => queryLayout(malformedLayout, 1n))
   })
 
-  test('layout with pos out of boundaries', () => {
+  runTest('layout with pos out of boundaries', () => {
     const oneInput = new BigUint64Array([2n])
 
     const oneLayout = loned(oneInput)
